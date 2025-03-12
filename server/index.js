@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 
 const predictRoutes = require('./routes/predict');
 const transferRoutes = require('./routes/transfer');
+const otpRoutes = require('./routes/sendotp');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +37,7 @@ app.use(express.json());
 // Routes
 app.use('/api/predict', predictRoutes);
 app.use('/api/transfer', transferRoutes);
+app.use('/api/sendotp', otpRoutes);
 
 // Global error handling middleware
 app.use((err, req, res, next) => {

@@ -2,28 +2,50 @@ const Transaction = require('../models/Transaction');
 
 exports.predictFraud = async (req, res, next) => {
   try {
-    const { features } = req.body;
-    if (!features || !Array.isArray(features)) {
-      return res.status(400).json({ error: 'Invalid input. "features" must be an array.' });
+    const { receiver, amount, features } = req.body;
+    if (!receiver || !amount) {
+      return res.status(400).json({ error: "Missing receiver or amount" });
     }
 
-    // Simulate risk score using a random number between 0 and 1
-    const riskScore = Math.random();
+    // Example: Count recent transactions for this receiver in the last hour.
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentCount = await Transaction.countDocuments({
+      receiver,
+      createdAt: { $gte: oneHourAgo },
+    });
 
-    // Create a new transaction record with the simulated risk score
+    // Start with a random base risk score
+    let riskScore = Math.random();
+    riskScore += recentCount * 0.05;
+    if (amount > 1000) riskScore += 0.2;
+    if (riskScore > 1) riskScore = 1;
+
+    // Determine risk category
+    let riskCategory = 'low';
+    if (riskScore < 0.4) {
+      riskCategory = 'low';
+    } else if (riskScore < 0.7) {
+      riskCategory = 'medium';
+    } else {
+      riskCategory = 'high';
+    }
+
+    // Create a new transaction record (email not provided at this step)
     const newTransaction = new Transaction({
-      features,
+      receiver,
+      amount,
+      features: features || [],
       riskScore,
+      riskCategory,
       status: "pending",
-      createdAt: new Date(),
     });
 
     await newTransaction.save();
 
-    // Return both the risk_score and the transaction ID
     res.json({
       risk_score: riskScore,
-      transactionId: newTransaction._id
+      riskCategory,
+      transactionId: newTransaction._id,
     });
   } catch (error) {
     next(error);
