@@ -5,12 +5,12 @@ async function createTestAccountAndTransport() {
   let testAccount = await nodemailer.createTestAccount();
   let transporter = nodemailer.createTransport({
     service: 'gmail',
-    host: 'smtp.gmail.com',
+    host: process.env.SMTP_USER,
     port: 587,
     secure: false,
     auth: {
-      user: 'brainbric@gmail.com',
-      pass: 'vhoa kfcc xmsp asmx'
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASS
     }
   });
   return transporter;
